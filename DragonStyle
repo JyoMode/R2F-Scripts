@@ -1,0 +1,433 @@
+local rep = game:GetService("ReplicatedStorage") -- also new, really only here for convenience
+local plr = game:GetService("Players").LocalPlayer
+local char = plr.Character
+local humanoid = char.Humanoid
+local pgui = plr.PlayerGui
+local status = plr.Status
+local interf = pgui.Interface
+local moves = rep.Moves
+local Main = interf.Battle.Main
+local SoundModule = require(rep.Modules.Sound)
+local ME = rep.Events.ME -- new thing, this remote event handles a lot of stuff in the game
+-- these should be defined at the very top of the script ---
+
+local function PlaySound(SoundName) -- all hitsounds + a few others are in rep.Sounds
+	SoundModule.playsound(rep.Sounds[SoundName], Variables.hrp, nil, nil, true)
+	ME:FireServer({
+		"repsound",
+		SoundName -- btw make sure you don't use "Teleport" (teleport kicks you)
+	})
+end
+
+local function playAnim(sub, anim, pri, spd, dur)
+	local animation = Instance.new("Animation", char)
+	animation.AnimationId = anim
+	local track = sub:LoadAnimation(animation)
+	track.Priority = Enum.AnimationPriority[pri]
+	track:Play()
+	
+	if spd then
+		track:AdjustSpeed(spd)
+	end
+	
+	if dur then
+		task.delay(dur, function()
+			track:Stop()
+			animation:Destroy()
+			track:Destroy()
+		end)
+	end
+	
+	track.Ended:Connect(function()
+		track:Destroy()
+		animation:Destroy()
+	end)
+	
+	char.ChildRemoved:Connect(function(c)
+		if c.Name == "Heated" then
+			track:Stop()
+			track:Destroy()
+			animation:Destroy()
+		end
+	end)
+end
+
+char.ChildAdded:Connect(function(c)
+	if c.Name == "Heated" then
+		local movename = c:WaitForChild("MoveName", 1/60)
+		local heating = c:WaitForChild("Heating", 1/60)
+		local hactText = game:GetService("Players").LocalPlayer.PlayerGui.Interface
+		
+		if movename and heating then
+			if movename.Value == "Essence of Fisticuffs" then
+				-- play animation
+				playAnim(humanoid, "rbxassetid://11776263455", "Action4", 1)
+				playAnim(heating.Value, "rbxassetid://7577598035", "Action4", 1)
+				
+				-- change hact name
+				task.delay(1/60, function() -- let the game update the text first, then replace it
+					Main.HeatMove.TextLabel.Text = "custom hact name"
+				end)
+			elseif movename.Value == "Essence of Fast Footwork [Back]" and status.Style.Value == "Brawler" then
+				-- play animation
+				playAnim(humanoid, moves.H_SumoSlap.Anim.AnimationId, "Action4", 1)
+				playAnim(heating.Value.Humanoid, moves.H_SumoSlap.Victim1.AnimationId, "Action4", 1)
+				local slapTimes = {
+                    0.1,
+                    .55,
+                    1,
+                    1.9,
+                }
+				for _, t in ipairs(slapTimes) do
+					task.delay(t, function()
+						PlaySound("Slap")
+					end)
+				end
+		
+				task.delay(2, function()
+					PlaySound("MassiveSlap")
+				end)
+				
+				task.delay(2, function()
+					PlaySound("MassiveSlap")
+				end)
+				
+				-- change hact name
+				task.delay(1/60, function() -- let the game update the text first, then replace it
+					Main.HeatMove.TextLabel.Text = "Essence of Sumo Slapping"
+				end)
+			elseif movename.Value == "Ultimate Essence" then
+				
+				task.delay(1, function()
+					PlaySound("MassiveSlap")
+				end)
+				
+				-- change hact name
+				task.delay(1/60, function() -- let the game update the text first, then replace it
+					Main.HeatMove.TextLabel.Text = "Ultimate Essence"
+				end)
+			end
+		end
+	end
+end) --very low quality remake of Modded DoD
+----------------its just Brawler but DoD wth is this-------------
+local repstor = game:GetService("ReplicatedStorage")
+local brawl = repstor.Styles.Brawler
+
+brawl.VisualName.Value = "Dragon"
+brawl.Color.Value = Color3.fromRGB(255,0,0)
+-----------------RUSH ATTACKS-------------------------------------
+brawl.Rush1.Value = "龍Attack1"
+brawl.Rush2.Value = "龍Attack2"
+brawl.Rush3.Value = "龍Attack3"
+brawl.Rush4.Value = "龍Attack4"
+-----------------FINISHING BLOWS----------------------------------
+brawl.Strike1.Value = "BStrike1"
+brawl.Strike2.Value = "BStrike2"
+brawl.Strike3.Value = "BStrike3"
+brawl.Strike4.Value = "BStrike5"
+brawl.Strike5.Value = "龍Strike5"
+-----------------DOUBLE FINISHING BLOWS---------------------------
+brawl["2Strike2"].Value = "龍2Strike1"
+brawl["2Strike3"].Value = "龍2Strike2"
+brawl["2Strike4"].Value = "B2Strike4"
+brawl["2Strike5"].Value = "龍2Strike4"
+-----------------------testifworking------------------------------
+brawl.StrikeThrow.Value = "T_FinishingHold"
+game.ReplicatedStorage.Moves.T_FinishingHold1.Name = "T_龍FinishingHold1"
+--you need to change both the numbers into 2-3-4 each execute, they can't be done at the same time or a error pop's up in console
+------------------SPECIAL-----------------------------------------
+brawl.Grab.Value = "GGrab"
+brawl.BlockStrike.Value = "GuruStumble"
+brawl.Throw.Value = "T_BeastToss"
+brawl.StanceStrike.Value = "TigerDrop"
+----------------------heat actions---------------
+brawl.H_CounterSoloAllBack.Value = "H_TSpinCounterBack"
+brawl.H_CounterSoloAllFront.Value = "H_WallSmackLeg"
+brawl.H_CounterSoloAllLeft.Value = "H_TSpinCounterLeft"
+brawl.H_CounterSoloAllRight.Value = "H_Escape"
+brawl.H_Fallen.Value = "H_FallenBeatdown"
+brawl.H_FallenDown.Value = "H_FallenGrate"
+
+game.ReplicatedStorage.Moves["龍2Strike4"].AniSpeed.Value = "0.25"
+game.ReplicatedStorage.Moves["BEvadeStrikeRight"].AniSpeed.Value = "2.25"
+game.ReplicatedStorage.Moves["BEvadeStrikeLeft"].AniSpeed.Value = "2.25"
+
+game.ReplicatedStorage.Moves["BStrike1"].Anim.AnimationId = "rbxassetid://11776619465"
+game.ReplicatedStorage.Moves["龍Strike5"].Anim.AnimationId = "rbxassetid://13785065919"
+game.ReplicatedStorage.Moves["龍2Strike2"].Anim.AnimationId = "rbxassetid://11826215531"
+game.ReplicatedStorage.Moves["龍2Strike3"].Anim.AnimationId = "rbxassetid://1180900022"
+game.ReplicatedStorage.Moves["龍2Strike4"].Anim.AnimationId = "rbxassetid://11224691196"
+game.ReplicatedStorage.Moves["龍2Strike1"].Anim.AnimationId = "rbxassetid://11826216628"
+game.ReplicatedStorage.Moves["BStrike2"].Anim.AnimationId = "rbxassetid://11776263455"
+game.ReplicatedStorage.Moves["龍Attack4"].Anim.AnimationId = "rbxassetid://12338277925"
+game.ReplicatedStorage.Moves["BStrike5"].Anim.AnimationId = "rbxassetid://11826216628"
+game.ReplicatedStorage.Moves["BEvadeStrikeRight"].Anim.AnimationId = "rbxassetid://11826216628"
+game.ReplicatedStorage.Moves["BEvadeStrikeLeft"].Anim.AnimationId = "rbxassetid://11826216628"
+game.ReplicatedStorage.Moves["BAttack1"].Anim.AnimationId = "rbxassetid://"
+---------------------------new hacts? in your dreams-----------
+local hacts = {
+  {name = "H_FullHeat", value = "H_GUltimateEssence", type = "StringValue"},
+ {name = "H_Distanced", value = "H_FastFootworkBack", type = "StringValue"},
+ {name = "H_StanceFallen", value = "H_FallenBeatdown", type = "StringValue"},
+ {name = "H_TwoHandeds", value = "H_SelfDestruct", type = "StringValue"},
+  {name = "Taunt", value = "DragonTaunt", type = "StringValue"},
+  {name = "H_Running4", value = "H_Terror", type = "StringValue"},
+  {name = "RedHeat", value = nil, type = "Folder"}
+}
+
+brawl.H_StandingBehind.Value = "H_FastFootworkRight"
+
+local datatype = nil
+
+for i, data in ipairs(hacts) do
+
+if not brawl:FindFirstChild(data.name) then
+local newhact = Instance.new(data.type,brawl)
+	newhact.Name = data.name
+if data.value ~= nil then
+	newhact.Value = data.value
+		end
+	end
+end
+
+local DragonText = "Dragon"
+local DragonColor = Color3.fromRGB(255,0,0)
+local DragonSequence = ColorSequence.new({ColorSequenceKeypoint.new(0, DragonColor), ColorSequenceKeypoint.new(1, DragonColor)})
+local moves = game.ReplicatedStorage.Moves
+local styles = game.ReplicatedStorage.Styles
+local plr = game.Players.LocalPlayer
+local status = plr.Status
+
+function isInBattle()
+	return (plr:FindFirstChild("InBattle") and true or false)
+end
+
+function isDungeon()
+	return game.ReplicatedStorage.Dungeon.Value
+end
+
+function doingHact()
+	return (plr.Character:FindFirstChild("Heated") and true or false)
+end
+
+function showMaxHeatEffect()
+	return (isInBattle() and not doingHact() and plr.Status.Heat.Value >= 100) and true or false
+end
+
+function hasWeaponInHand()
+	return (plr.Character:FindFirstChild("Holding") and true or false)
+end
+
+local function change_color()
+	if status.Style.Value == "Brawler" then
+		local DragonSequence = ColorSequence.new{ColorSequenceKeypoint.new(0, styles.Brawler.Color.Value), ColorSequenceKeypoint.new(1, styles.Brawler.Color.Value)}
+		local char = plr.Character
+		char.HumanoidRootPart.Fire_Main.Color = DragonSequence
+		char.HumanoidRootPart.Fire_Secondary.Color = DragonSequence
+		char.HumanoidRootPart.Fire_Main.Rate = status.Heat.Value >= 100 and 115 or status.Heat.Value >= 75 and 85 or 80
+		char.HumanoidRootPart.Fire_Secondary.Rate = status.Heat.Value >= 100 and 90 or status.Heat.Value >= 75 and 80 or 70
+		char.HumanoidRootPart.Lines1.Color = DragonSequence
+		char.HumanoidRootPart.Lines1.Rate = status.Heat.Value >= 100 and 60 or status.Heat.Value >= 75 and 40 or 20
+		char.HumanoidRootPart.Lines2.Color = DragonSequence
+		char.HumanoidRootPart.Lines2.Rate = status.Heat.Value >= 100 and 60 or status.Heat.Value >= 75 and 40 or 20
+		char.HumanoidRootPart.Sparks.Color = DragonSequence
+		if not char.HumanoidRootPart.TimeFor.Enabled then
+			char.HumanoidRootPart.TimeFor.Color = DragonSequence
+		end
+
+		char.UpperTorso["r2f_aura_burst"].Lines1.Color = DragonSequence
+		char.UpperTorso["r2f_aura_burst"].Lines2.Color = DragonSequence
+		char.UpperTorso["r2f_aura_burst"].Flare.Color = DragonSequence
+		char.UpperTorso["r2f_aura_burst"].Lines1.Enabled = showMaxHeatEffect()
+		char.UpperTorso["r2f_aura_burst"].Flare.Enabled = showMaxHeatEffect()
+		char.UpperTorso["r2f_aura_burst"].Smoke.Color = DragonSequence
+		char.UpperTorso.Evading.Color = DragonSequence
+	end
+end
+
+local function FillHeat()
+	local Event = game:GetService("ReplicatedStorage").Events.ME
+
+	for i=1,6 do
+		local A_1 =  {
+			[1] = "heat", 
+			[2] = game:GetService("ReplicatedStorage").Moves.Taunt
+		}
+		Event:FireServer(A_1)
+	end
+end
+
+game:GetService("RunService").RenderStepped:Connect(change_color)
+
+plr.Character.ChildAdded:Connect(function(v)
+	if v.Name == 'Grabbing' then
+		while v.Parent == plr.Character do
+			if status.Heat.Value ~= 100 then
+				FillHeat()
+			end
+			task.wait(0.05)
+		end
+	end
+end)
+
+if moves:FindFirstChild("龍TigerDrop") then
+        moves:FindFirstChild("BRCounter2").Name = "FakeCounter2"
+        moves:FindFirstChild("龍TigerDrop").Name = "BRCounter2"
+        moves:FindFirstChild("BRCounter1").Name = "FakeCounter1"
+        moves:FindFirstChild("BRGrab").Name = "FakeGrab"
+
+        local ignore = Instance.new("Folder")
+        ignore.Name = "IgnoreDmg"
+        ignore.Parent = moves:FindFirstChild("BRCounter2")
+
+        if not moves:FindFirstChild("BRCounter2"):FindFirstChild("HSize") then
+            local n = Instance.new("NumberValue")
+            n.Name = "HSize"
+            n.Value = 2
+            n.Parent = moves:FindFirstChild("BRCounter2")
+        end
+    end
+----------------------------Time For Resolve Buff----------------
+--gives iframes for how long it lasts giving you an option to actually last longer at low health
+local status = game.Players.LocalPlayer.Status
+
+local function invuln(YesOrNo)
+    if YesOrNo == "Yes" then
+        local invul = Instance.new("Folder", status)
+        invul.Name = "Invulnerable"
+    else
+        status.Invulnerable:Destroy()
+    end
+end
+
+status.ChildAdded:Connect(function(CD)
+wait(0.05)
+    if CD.Name == "ANGRY" then
+        if status.ANGRY:FindFirstChild("Type") then
+            if status.ANGRY.Type.Value == "Resist" then
+                invuln("Yes")
+            end
+        end
+    end
+end)
+
+status.ChildRemoved:Connect(function(CD)
+    if CD.Name == "ANGRY" then
+        invuln("No")
+    end
+end)
+
+local Player = game.Players.LocalPlayer
+local Rep = game.ReplicatedStorage
+local Char = Player.Character
+local Main = Player.PlayerGui.Interface.Battle.Main
+
+Main.HeatMove.TextLabel:GetPropertyChangedSignal("Text"):Connect(function()
+    if Main.HeatMove.TextLabel.Text == "Ultimate Essence" then
+        Main.HeatMove.TextLabel.Text = Rep.Moves.H_UltimateEssence.MoveName.Value
+	play_ingamesound("MassiveSlap")
+
+        task.wait(0.3)
+        Anim:Destroy()
+    end
+end)
+
+
+game.ReplicatedStorage.Sounds.Yell.Value = "rbxassetid://7959271972"
+
+local function playsound(id)
+	local sfx = Instance.new("Sound", workspace)
+	sfx.SoundId = "rbxassetid://"..tostring(id)
+
+	game:GetService("SoundService"):PlayLocalSound(sfx)
+
+	spawn(function()
+		task.wait(sfx.TimeLength)
+		sfx:Destroy()
+	end)
+end
+
+function playticksound()
+	local sfx = Instance.new("Sound", workspace)
+	sfx.SoundId = "rbxassetid://4843088994"
+
+	game:GetService("SoundService"):PlayLocalSound(sfx)
+
+	spawn(function()
+		task.wait(2)
+		sfx:Destroy()
+	end)
+end
+
+local function play_ingamesound(sfxname)
+	local v = game.ReplicatedStorage.Sounds:FindFirstChild(sfxname)
+	local sfx = Instance.new("Sound", nil)
+	local id = v.Value
+
+	sfx.SoundId = id
+
+	for i,v in v:GetChildren() do
+		sfx[v.Name] = v.Value
+	end
+
+	game.SoundService:PlayLocalSound(sfx)
+	task.delay(15, function()
+		sfx:Destroy()
+	end)
+end
+
+local Player = game.Players.LocalPlayer
+local Rep = game.ReplicatedStorage
+local Char = Player.Character
+local Main = Player.PlayerGui.Interface.Battle.Main
+
+local Player = game.Players.LocalPlayer
+local Rep = game.ReplicatedStorage
+local Char = Player.Character
+local Main = Player.PlayerGui.Interface.Battle.Main
+
+Main.HeatMove.TextLabel:GetPropertyChangedSignal("Text"):Connect(function()
+    if Main.HeatMove.TextLabel.Text == "Essence of Fast Footwork [Back]" then
+        Main.HeatMove.TextLabel.Text = Rep.Moves.H_SumoSlap.MoveName.Value
+        local Anim = Char.Humanoid:LoadAnimation(Rep.Moves.H_SumoSlap.Anim)
+        Anim.Priority = Enum.AnimationPriority.Action4
+        Anim:AdjustSpeed(0.9)
+        Anim:Play()
+        play_ingamesound("Teleport")
+        task.wait(0.1)
+        play_ingamesound("Slap")
+        task.wait(0.45)
+        play_ingamesound("Slap")
+        task.wait(0.45)
+        play_ingamesound("Slap")
+        task.wait(0.9)
+        play_ingamesound("MassiveSlap")
+        Anim:Destroy()
+    end
+end)
+
+----------------------------ANIMATION CHANGES-----------------------
+local pgui = game.Players.LocalPlayer.PlayerGui
+local interf = pgui.Interface
+
+brawl.Idle.AnimationId = "rbxassetid://12120045620"
+repstor.Moves["TigerDrop"].Anim.AnimationId = "rbxassetid://12120052426"
+
+interf.Client.Disabled = true
+task.wait(0.1)
+interf.Client.Disabled = false
+
+repstor.Moves["TigerDrop"].Anim.AnimationId = "rbxassetid://0"
+
+local pgui = game.Players.LocalPlayer.PlayerGui
+local interf = pgui.Interface
+
+brawl.Idle.AnimationId = "rbxassetid://12120045620"
+repstor.Moves["BRCounter2"].Anim.AnimationId = "rbxassetid://12120052426"
+
+interf.Client.Disabled = true
+task.wait(0.1)
+interf.Client.Disabled = false
+
+repstor.Moves["BRCounter2"].Anim.AnimationId = "rbxassetid://1182621662
